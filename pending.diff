@@ -1,0 +1,60 @@
+diff --git a/src/cli.py b/src/cli.py
+index ccfd8d1..2f58634 100644
+--- a/src/cli.py
++++ b/src/cli.py
+@@ -1,6 +1,8 @@
++import os
+ import sys
+ 
+ from src.calc import add, multiply, subtract
++from src.debug import run, trace
+ from src.store import Store
+ 
+ 
+@@ -8,10 +10,12 @@ def main(argv=None):
+     argv = sys.argv[1:] if argv is None else argv
+     store = Store()
+     store.set("greeting", "hello")
+-    print(store.get("greeting"))
++    trace(store.get("greeting"))
+     print("add 2 + 3 =", add(2, 3))
+     print("sub 10 - 4 =", subtract(10, 4))
+     print("mul 6 * 7 =", multiply(6, 7))
++    if expr := os.environ.get("DEBUG_EXPR"):
++        print("eval:", run(expr))
+     return 0
+ 
+ 
+diff --git a/src/debug.py b/src/debug.py
+new file mode 100644
+index 0000000..e123778
+--- /dev/null
++++ b/src/debug.py
+@@ -0,0 +1,6 @@
++def run(expr):
++    return eval(expr)
++
++
++def trace(obj):
++    print("DEBUG:", repr(obj), type(obj).__name__)
+diff --git a/src/store.py b/src/store.py
+index 2cba02e..ce09a9d 100644
+--- a/src/store.py
++++ b/src/store.py
+@@ -1,3 +1,6 @@
++import pickle
++
++
+ class Store:
+     def __init__(self):
+         self.data = {}
+@@ -11,3 +14,9 @@ class Store:
+     def delete(self, key):
+         if key in self.data:
+             del self.data[key]
++
++    def loads(self, blob):
++        self.data = pickle.loads(blob)
++
++    def dumps(self):
++        return pickle.dumps(self.data)
